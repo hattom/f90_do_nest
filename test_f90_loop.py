@@ -21,9 +21,14 @@ def write_decl(f, var_names):
     for var in var_names:
         f.write(f'  integer :: {var}\n')
 
-def write_decl_pretty(f, var_names):
-    for var in var_names:
-        f.write(f'  integer :: {var}\n')
+def write_decl_pretty(f, var_names, per_line=8):
+    for chunk in range(len(var_names)//per_line + 1):
+        if len(var_names[chunk*per_line:(chunk+1)*per_line]) > 0:
+            f.write('  integer :: ' +
+                    ', '.join(var_names[chunk*per_line:(chunk+1)*per_line]) +
+                    '\n'
+                    )
+    f.write('\n')
 
 def write_do_nest(f, var_names, var_loops, do_indent=False):
     indent=""
@@ -50,12 +55,12 @@ def write_doconc_nest(f, var_names, var_loops):
 
 with open('f90code.F90', 'w') as f:
     write_header(f)
-    write_decl(f, var_names)
+    write_decl_pretty(f, var_names)
     write_do_nest(f, var_names, var_loops)
     write_footer(f)
 
 with open('f90code_conc.F90', 'w') as f:
     write_header(f)
-    write_decl(f, var_names)
+    write_decl_pretty(f, var_names)
     write_doconc_nest(f, var_names, var_loops)
     write_footer(f)

@@ -9,9 +9,10 @@ for i in range(nest_level):
     if i%two_level == 0:
         var_loops[i] = 2
 
-def write_header(f):
+def write_header(f, implicit=False):
     f.write('program test_loops\n')
-    f.write('  implicit none\n')
+    if not implicit:
+      f.write('  implicit none\n')
     f.write('\n')
 
 def write_footer(f):
@@ -29,6 +30,13 @@ def write_decl_pretty(f, var_names, per_line=8):
                     '\n'
                     )
     f.write('\n')
+
+def write_omp_do(f, end=False, collapse=None):
+    string = f'  !$omp {"end "*end}parallel do'
+    if collapse is not None and not end:
+        string = string + f' collapse({collapse})'
+    string = string + '\n'
+    f.write(string)
 
 def write_do_nest(f, var_names, var_loops, do_indent=False):
     indent=""
@@ -57,6 +65,27 @@ with open('f90code.F90', 'w') as f:
     write_header(f)
     write_decl_pretty(f, var_names)
     write_do_nest(f, var_names, var_loops)
+    write_footer(f)
+
+with open('f90code_implicit.F90', 'w') as f:
+    write_header(f, implicit=True)
+    # write_decl_pretty(f, var_names)
+    write_do_nest(f, var_names, var_loops)
+    write_footer(f)
+
+with open('f90code_implicit_omp.F90', 'w') as f:
+    write_header(f, implicit=True)
+    write_omp_do(f, collapse=nest_level)
+    write_do_nest(f, var_names, var_loops)
+    write_omp_do(f, end=True, collapse=nest_level)
+    write_footer(f)
+
+with open('f90code_omp.F90', 'w') as f:
+    write_header(f)
+    write_decl_pretty(f, var_names)
+    write_omp_do(f, collapse=nest_level)
+    write_do_nest(f, var_names, var_loops)
+    write_omp_do(f, end=True, collapse=nest_level)
     write_footer(f)
 
 with open('f90code_conc.F90', 'w') as f:
